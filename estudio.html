@@ -1,0 +1,248 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mi Gestor de Estudio</title>
+    <style>
+        /* TUS ESTILOS CSS AQUÍ */
+        :root {
+            --primary: #4f46e5;
+            --primary-hover: #4338ca;
+            --bg-color: #f3f4f6;
+            --card-bg: #ffffff;
+            --text-main: #1f2937;
+            --text-muted: #6b7280;
+            --border-color: #e5e7eb;
+        }
+        * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
+        body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; }
+        header { background-color: var(--card-bg); padding: 1.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+        header h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.5rem; }
+        header p { color: var(--text-muted); font-size: 0.9rem; }
+        .container { display: flex; flex: 1; overflow: hidden; padding: 2rem; gap: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
+        
+        /* Sidebar */
+        .sidebar { width: 300px; background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
+        .sidebar h2 { margin-bottom: 1rem; font-size: 1.2rem; }
+        .input-group { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
+        input[type="text"] { flex: 1; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
+        input[type="text"]:focus { border-color: var(--primary); }
+        button { background-color: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
+        button:hover { background-color: var(--primary-hover); }
+        .subjects-list { list-style: none; overflow-y: auto; }
+        .subjects-list li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
+        .subjects-list li:hover, .subjects-list li.active { background: var(--primary); color: white; }
+        .delete-btn { font-size: 1.2rem; cursor: pointer; }
+        .delete-btn:hover { color: #ff4757; }
+        
+        /* Contenido Principal */
+        .content { flex: 1; background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto; }
+        .welcome-message { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .hidden { display: none !important; }
+        #current-subject-title { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary); border-bottom: 2px solid var(--bg-color); padding-bottom: 0.5rem; }
+        
+        /* Temas */
+        details { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
+        summary { padding: 1rem; font-weight: bold; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; list-style: none; }
+        summary::-webkit-details-marker { display: none; }
+        summary::after { content: "▼"; color: var(--text-muted); font-size: 0.8rem; }
+        details[open] summary::after { content: "▲"; }
+        .reflection-form { padding: 1.5rem; border-top: 1px solid var(--border-color); }
+        .question-block { margin-bottom: 1.5rem; }
+        .question-block label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
+        .question-block textarea { width: 100%; min-height: 80px; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: 6px; resize: vertical; }
+        .question-block textarea:focus { border-color: var(--primary); outline: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>📚 Mi Gestor de Estudio</h1>
+        <p>Preparación para Finales y Universidad</p>
+    </header>
+
+    <main class="container">
+        <!-- Panel lateral: Materias -->
+        <aside class="sidebar">
+            <h2>Materias</h2>
+            <div class="input-group">
+                <input type="text" id="subject-input" placeholder="Ej. Matemáticas...">
+                <button id="add-subject-btn">+</button>
+            </div>
+            <ul id="subjects-list" class="subjects-list"></ul>
+        </aside>
+
+        <!-- Área principal: Temas y Preguntas -->
+        <section class="content">
+            <div id="welcome-message" class="welcome-message">
+                <h2>Selecciona o crea una materia para empezar a estudiar 🚀</h2>
+            </div>
+
+            <div id="subject-workspace" class="hidden">
+                <h2 id="current-subject-title">Nombre de la Materia</h2>
+                
+                <div class="input-group">
+                    <input type="text" id="topic-input" placeholder="Nuevo tema (Ej. Célula Eucariota)...">
+                    <button id="add-topic-btn">Agregar Tema</button>
+                </div>
+
+                <div id="topics-container" class="topics-container"></div>
+            </div>
+        </section>
+    </main>
+
+    <script>
+        // LÓGICA JAVASCRIPT PROTEGIDA
+        let studyData = [];
+        let currentSubjectId = null;
+
+        // Intentar cargar datos guardados (con protección por si el navegador lo bloquea)
+        try {
+            const savedData = localStorage.getItem('studyData');
+            if (savedData) {
+                studyData = JSON.parse(savedData);
+            }
+        } catch (error) {
+            console.warn("El navegador no permite guardar datos locales. Los datos se borrarán al cerrar la pestaña.");
+        }
+
+        const subjectInput = document.getElementById('subject-input');
+        const addSubjectBtn = document.getElementById('add-subject-btn');
+        const subjectsList = document.getElementById('subjects-list');
+        const welcomeMessage = document.getElementById('welcome-message');
+        const subjectWorkspace = document.getElementById('subject-workspace');
+        const currentSubjectTitle = document.getElementById('current-subject-title');
+        const topicInput = document.getElementById('topic-input');
+        const addTopicBtn = document.getElementById('add-topic-btn');
+        const topicsContainer = document.getElementById('topics-container');
+
+        function saveData() {
+            try {
+                localStorage.setItem('studyData', JSON.stringify(studyData));
+            } catch (error) {
+                // Falla silenciosamente si el navegador bloquea el guardado
+            }
+        }
+
+        // AGREGAR MATERIA (Con clic y con Enter)
+        function addSubject() {
+            const name = subjectInput.value.trim();
+            if (name) {
+                const newSubject = { id: Date.now().toString(), name: name, topics: [] };
+                studyData.push(newSubject);
+                saveData();
+                subjectInput.value = '';
+                renderSubjects();
+            }
+        }
+        addSubjectBtn.addEventListener('click', addSubject);
+        subjectInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSubject(); });
+
+        function renderSubjects() {
+            subjectsList.innerHTML = '';
+            studyData.forEach(subject => {
+                const li = document.createElement('li');
+                li.textContent = subject.name;
+                
+                if (subject.id === currentSubjectId) li.classList.add('active');
+
+                const deleteBtn = document.createElement('span');
+                deleteBtn.textContent = '×';
+                deleteBtn.className = 'delete-btn';
+                deleteBtn.onclick = (e) => {
+                    e.stopPropagation();
+                    if(confirm(`¿Eliminar la materia ${subject.name}?`)) {
+                        studyData = studyData.filter(s => s.id !== subject.id);
+                        if(currentSubjectId === subject.id) {
+                            currentSubjectId = null;
+                            welcomeMessage.classList.remove('hidden');
+                            subjectWorkspace.classList.add('hidden');
+                        }
+                        saveData();
+                        renderSubjects();
+                    }
+                };
+
+                li.appendChild(deleteBtn);
+                li.addEventListener('click', () => {
+                    currentSubjectId = subject.id;
+                    renderSubjects(); 
+                    openSubject(subject);
+                });
+
+                subjectsList.appendChild(li);
+            });
+        }
+
+        function openSubject(subject) {
+            welcomeMessage.classList.add('hidden');
+            subjectWorkspace.classList.remove('hidden');
+            currentSubjectTitle.textContent = subject.name;
+            renderTopics(subject);
+        }
+
+        // AGREGAR TEMA (Con clic y con Enter)
+        function addTopic() {
+            const title = topicInput.value.trim();
+            if (title && currentSubjectId) {
+                const subjectIndex = studyData.findIndex(s => s.id === currentSubjectId);
+                studyData[subjectIndex].topics.push({
+                    id: Date.now().toString(),
+                    title: title,
+                    q1: '', q2: '', q3: ''
+                });
+                saveData();
+                topicInput.value = '';
+                openSubject(studyData[subjectIndex]);
+            }
+        }
+        addTopicBtn.addEventListener('click', addTopic);
+        topicInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTopic(); });
+
+        function renderTopics(subject) {
+            topicsContainer.innerHTML = '';
+            
+            subject.topics.forEach(topic => {
+                const details = document.createElement('details');
+                const summary = document.createElement('summary');
+                summary.innerHTML = `<span>${topic.title}</span>`;
+                
+                const formDiv = document.createElement('div');
+                formDiv.className = 'reflection-form';
+
+                const questions = [
+                    { key: 'q1', label: '👀 ¿Qué viste en este tema?' },
+                    { key: 'q2', label: '✨ ¿Qué te llamó más la atención?' },
+                    { key: 'q3', label: '🧠 ¿Qué fue lo que más recordaste?' }
+                ];
+
+                questions.forEach(q => {
+                    const qBlock = document.createElement('div');
+                    qBlock.className = 'question-block';
+                    const label = document.createElement('label');
+                    label.textContent = q.label;
+                    const textarea = document.createElement('textarea');
+                    textarea.placeholder = "Escribe tus apuntes aquí...";
+                    textarea.value = topic[q.key];
+                    
+                    textarea.addEventListener('input', (e) => {
+                        topic[q.key] = e.target.value;
+                        saveData();
+                    });
+
+                    qBlock.appendChild(label);
+                    qBlock.appendChild(textarea);
+                    formDiv.appendChild(qBlock);
+                });
+
+                details.appendChild(summary);
+                details.appendChild(formDiv);
+                topicsContainer.appendChild(details);
+            });
+        }
+
+        // Iniciar
+        renderSubjects();
+    </script>
+</body>
+</html>
