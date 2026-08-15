@@ -21,253 +21,164 @@
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; }
         header { background-color: var(--card-bg); padding: 1.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
         header h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.5rem; }
-        header p { color: var(--text-muted); font-size: 0.9rem; }
         .container { display: flex; flex: 1; overflow: hidden; padding: 2rem; gap: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-        
         .sidebar { width: 300px; background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .sidebar h2 { margin-bottom: 1rem; font-size: 1.2rem; }
         .input-group { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
         input[type="text"] { flex: 1; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
-        input[type="text"]:focus { border-color: var(--primary); }
         button { background-color: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
         button:hover { background-color: var(--primary-hover); }
         .subjects-list { list-style: none; overflow-y: auto; }
         .subjects-list li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .subjects-list li:hover, .subjects-list li.active { background: var(--primary); color: white; }
         .delete-btn { font-size: 1.2rem; cursor: pointer; color: #ff4757; }
-        
         .content { flex: 1; background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto; }
-        .welcome-message { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
         .hidden { display: none !important; }
-        #current-subject-title { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary); border-bottom: 2px solid var(--bg-color); padding-bottom: 0.5rem; }
-        
         details { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
-        summary { padding: 1rem; font-weight: bold; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; list-style: none; }
-        summary::-webkit-details-marker { display: none; }
-        summary::after { content: "▼"; color: var(--text-muted); font-size: 0.8rem; }
-        details[open] summary::after { content: "▲"; }
+        summary { padding: 1rem; font-weight: bold; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; }
         .reflection-form { padding: 1.5rem; border-top: 1px solid var(--border-color); }
-        .question-block { margin-bottom: 1.5rem; }
-        .question-block label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
-        .question-block textarea { width: 100%; min-height: 80px; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: 6px; resize: vertical; }
-        .question-block textarea:focus { border-color: var(--primary); outline: none; }
-
-        /* Estilo de la sorpresa original */
-        .surprise-box { background-color: var(--surprise-bg); border: 1px solid var(--surprise-border); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--surprise-text); }
-        .surprise-box h4 { margin-bottom: 0.3rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
-        .surprise-box p { font-size: 0.9rem; line-height: 1.4; }
+        .question-block { margin-bottom: 1rem; }
+        textarea { width: 100%; min-height: 60px; padding: 0.5rem; border: 1px solid var(--border-color); border-radius: 4px; resize: vertical; }
+        .surprise-box { background-color: var(--surprise-bg); border: 1px solid var(--surprise-border); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; color: var(--surprise-text); font-size: 0.9rem; }
     </style>
 </head>
 <body>
-    <header>
-        <h1>📚 Mi Gestor de Estudio</h1>
-        <p>Preparación para Finales y Universidad</p>
-    </header>
-
+    <header><h1>📚 Mi Gestor de Estudio</h1></header>
     <main class="container">
         <aside class="sidebar">
             <h2>Materias</h2>
             <div class="input-group">
-                <input type="text" id="subject-input" placeholder="Ej. Matemáticas...">
+                <input type="text" id="subject-input" placeholder="Nombre materia...">
                 <button id="add-subject-btn">+</button>
             </div>
             <ul id="subjects-list" class="subjects-list"></ul>
         </aside>
-
         <section class="content">
-            <div id="welcome-message" class="welcome-message">
-                <h2>Selecciona o crea una materia para empezar a estudiar 🚀</h2>
-            </div>
-
+            <div id="welcome-message"><h2>Selecciona una materia para empezar 🚀</h2></div>
             <div id="subject-workspace" class="hidden">
-                <h2 id="current-subject-title">Nombre de la Materia</h2>
-                
+                <h2 id="current-subject-title"></h2>
                 <div class="input-group">
-                    <input type="text" id="topic-input" placeholder="Nuevo tema (Ej. Célula Eucariota)...">
+                    <input type="text" id="topic-input" placeholder="Nuevo tema...">
                     <button id="add-topic-btn">Agregar Tema</button>
                 </div>
-
-                <div id="topics-container" class="topics-container"></div>
+                <div id="topics-container"></div>
             </div>
         </section>
     </main>
 
     <script>
+        const DB_KEY = 'mis_materias_prepa_v3';
         let studyData = [];
         let currentSubjectId = null;
-        const DB_KEY = 'mis_materias_prepa_v2';
 
-        // Banco de retos sorpresa para potenciar el aprendizaje activo
-        const learningChallenges = [
-            "💡 Reto Feynman: Explica este tema en voz alta como si se lo enseñaras a un niño de 10 años, sin usar palabras complicadas.",
-            "🧩 Conexión Loca: Intenta relacionar este tema con algo de la vida cotidiana o un videojuego/película que te guste.",
-            "⚡ Alerta de Trampa: Piensa en cuál sería la pregunta más 'tranza' o difícil que un profesor te podría poner sobre este tema en el examen.",
-            "🎯 Síntesis extrema: Si solo pudieras recordar una sola frase de este tema para toda tu vida, ¿cuál sería? Escríbela.",
-            "🔄 Inversión de roles: Imagina que tú eres el profesor y redacta mentalmente un mini examen de opción múltiple sobre este tema."
+        const challenges = [
+            "💡 Reto Feynman: Explica este tema como si se lo enseñaras a un niño de 10 años.",
+            "🧩 Conexión Loca: ¿Cómo se relaciona este tema con un videojuego o película?",
+            "⚡ Alerta de Trampa: ¿Cuál es la pregunta más difícil que podría venir en el examen?",
+            "🎯 Síntesis extrema: Resume este tema en una sola frase potente."
         ];
 
-        try {
-            const savedData = localStorage.getItem(DB_KEY);
-            if (savedData) {
-                const parseado = JSON.parse(savedData);
-                if (Array.isArray(parseado)) {
-                    studyData = parseado;
-                }
+        // CARGA SEGURA
+        function loadData() {
+            try {
+                const data = localStorage.getItem(DB_KEY);
+                return data ? JSON.parse(data) : [];
+            } catch (e) {
+                console.error("Memoria corrupta, reiniciando...");
+                return [];
             }
-        } catch (error) {
-            console.log("Reiniciando memoria local.");
-            studyData = [];
         }
 
-        const subjectInput = document.getElementById('subject-input');
-        const addSubjectBtn = document.getElementById('add-subject-btn');
-        const subjectsList = document.getElementById('subjects-list');
-        const welcomeMessage = document.getElementById('welcome-message');
-        const subjectWorkspace = document.getElementById('subject-workspace');
-        const currentSubjectTitle = document.getElementById('current-subject-title');
-        const topicInput = document.getElementById('topic-input');
-        const addTopicBtn = document.getElementById('add-topic-btn');
-        const topicsContainer = document.getElementById('topics-container');
+        studyData = loadData();
 
         function saveData() {
-            try {
-                localStorage.setItem(DB_KEY, JSON.stringify(studyData));
-            } catch (error) {
-                console.error("Error guardando.");
-            }
+            localStorage.setItem(DB_KEY, JSON.stringify(studyData));
         }
 
-        function addSubject() {
+        // DOM ELEMENTS
+        const subjectInput = document.getElementById('subject-input');
+        const addSubjectBtn = document.getElementById('add-subject-btn');
+        const topicInput = document.getElementById('topic-input');
+        const addTopicBtn = document.getElementById('add-topic-btn');
+
+        // AGREGAR MATERIA
+        addSubjectBtn.onclick = () => {
             const name = subjectInput.value.trim();
-            if (name) {
-                const newSubject = { id: Date.now().toString(), name: name, topics: [] };
-                studyData.push(newSubject);
-                saveData();
-                subjectInput.value = '';
-                renderSubjects();
-            }
-        }
+            if(!name) return;
+            studyData.push({ id: Date.now().toString(), name, topics: [] });
+            subjectInput.value = '';
+            saveData();
+            renderSubjects();
+        };
 
-        addSubjectBtn.addEventListener('click', addSubject);
-        subjectInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSubject(); });
+        // AGREGAR TEMA
+        addTopicBtn.onclick = () => {
+            const title = topicInput.value.trim();
+            if(!title || !currentSubjectId) return;
+            
+            const subj = studyData.find(s => s.id === currentSubjectId);
+            subj.topics.push({
+                id: Date.now().toString(),
+                title,
+                q1:'', q2:'', q3:'', q4:'', q5:'',
+                challenge: challenges[Math.floor(Math.random() * challenges.length)]
+            });
+            topicInput.value = '';
+            saveData();
+            openSubject(subj);
+        };
 
         function renderSubjects() {
-            subjectsList.innerHTML = '';
-            studyData.forEach(subject => {
+            const list = document.getElementById('subjects-list');
+            list.innerHTML = '';
+            studyData.forEach(s => {
                 const li = document.createElement('li');
-                li.textContent = subject.name;
+                li.innerHTML = `${s.name} <span class="delete-btn">×</span>`;
+                if(s.id === currentSubjectId) li.classList.add('active');
                 
-                if (subject.id === currentSubjectId) li.classList.add('active');
-
-                const deleteBtn = document.createElement('span');
-                deleteBtn.textContent = '×';
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    if(confirm('¿Eliminar la materia ' + subject.name + '?')) {
-                        studyData = studyData.filter(s => s.id !== subject.id);
-                        if(currentSubjectId === subject.id) {
+                li.onclick = (e) => {
+                    if(e.target.classList.contains('delete-btn')) {
+                        if(confirm('¿Borrar materia?')) {
+                            studyData = studyData.filter(x => x.id !== s.id);
                             currentSubjectId = null;
-                            welcomeMessage.classList.remove('hidden');
-                            subjectWorkspace.classList.add('hidden');
+                            saveData(); renderSubjects(); document.getElementById('subject-workspace').classList.add('hidden');
                         }
-                        saveData();
-                        renderSubjects();
+                    } else {
+                        currentSubjectId = s.id;
+                        openSubject(s);
                     }
                 };
-
-                li.appendChild(deleteBtn);
-                li.addEventListener('click', () => {
-                    currentSubjectId = subject.id;
-                    renderSubjects(); 
-                    openSubject(subject);
-                });
-
-                subjectsList.appendChild(li);
+                list.appendChild(li);
             });
         }
 
-        function openSubject(subject) {
-            welcomeMessage.classList.add('hidden');
-            subjectWorkspace.classList.remove('hidden');
-            currentSubjectTitle.textContent = subject.name;
-            renderTopics(subject);
-        }
-
-        function addTopic() {
-            const title = topicInput.value.trim();
-            if (title && currentSubjectId) {
-                const subjectIndex = studyData.findIndex(s => s.id === currentSubjectId);
-                // Asignamos un reto aleatorio único para este tema basado en su longitud de texto o ID
-                const randomChallenge = learningChallenges[Math.floor(Math.random() * learningChallenges.length)];
-                
-                studyData[subjectIndex].topics.push({
-                    id: Date.now().toString(),
-                    title: title,
-                    q1: '', q2: '', q3: '', q4: '', q5: '',
-                    challenge: randomChallenge
-                });
-                saveData();
-                topicInput.value = '';
-                openSubject(studyData[subjectIndex]);
-            }
-        }
-
-        addTopicBtn.addEventListener('click', addTopic);
-        topicInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTopic(); });
-
-        function renderTopics(subject) {
-            topicsContainer.innerHTML = '';
+        function openSubject(s) {
+            document.getElementById('welcome-message').classList.add('hidden');
+            document.getElementById('subject-workspace').classList.remove('hidden');
+            document.getElementById('current-subject-title').textContent = s.name;
+            const container = document.getElementById('topics-container');
+            container.innerHTML = '';
             
-            subject.topics.forEach(topic => {
+            s.topics.forEach(t => {
                 const details = document.createElement('details');
-                const summary = document.createElement('summary');
-                summary.innerHTML = '<span>' + topic.title + '</span>';
+                details.innerHTML = `<summary>${t.title}</summary>
+                    <div class="reflection-form">
+                        <div class="surprise-box">🎁 <b>Reto:</b> ${t.challenge}</div>
+                        <div class="question-block"><label>¿Qué viste?</label><textarea data-key="q1">${t.q1||''}</textarea></div>
+                        <div class="question-block"><label>¿Qué te llamó la atención?</label><textarea data-key="q2">${t.q2||''}</textarea></div>
+                        <div class="question-block"><label>¿Qué recordaste?</label><textarea data-key="q3">${t.q3||''}</textarea></div>
+                        <div class="question-block"><label>¿Hubo un apunte importante?</label><textarea data-key="q4">${t.q4||''}</textarea></div>
+                        <div class="question-block"><label>¿Algo que no quisieras olvidar?</label><textarea data-key="q5">${t.q5||''}</textarea></div>
+                    </div>`;
                 
-                const formDiv = document.createElement('div');
-                formDiv.className = 'reflection-form';
-
-                // Caja sorpresa integrada de forma original
-                if (!topic.challenge) {
-                    topic.challenge = learningChallenges[Math.floor(Math.random() * learningChallenges.length)];
-                }
-                const surpriseBox = document.createElement('div');
-                surpriseBox.className = 'surprise-box';
-                surpriseBox.innerHTML = `<h4>🎁 Chispa de Aprendizaje Activo</h4><p>${topic.challenge}</p>`;
-                formDiv.appendChild(surpriseBox);
-
-                // Preguntas actualizadas según tu solicitud
-                const questions = [
-                    { key: 'q1', label: '👀 ¿Qué viste en este tema?' },
-                    { key: 'q2', label: '✨ ¿Qué te llamó más la atención?' },
-                    { key: 'q3', label: '🧠 ¿Qué fue lo que más recordaste?' },
-                    { key: 'q4', label: '⭐ ¿Hubo un apunte importante?' },
-                    { key: 'q5', label: '🔒 Agrega algo que no quisieras olvidar' }
-                ];
-
-                questions.forEach(q => {
-                    const qBlock = document.createElement('div');
-                    qBlock.className = 'question-block';
-                    const label = document.createElement('label');
-                    label.textContent = q.label;
-                    const textarea = document.createElement('textarea');
-                    textarea.placeholder = "Escribe tus apuntes aquí...";
-                    textarea.value = topic[q.key] || '';
-                    
-                    textarea.addEventListener('input', (e) => {
-                        topic[q.key] = e.target.value;
+                details.querySelectorAll('textarea').forEach(ta => {
+                    ta.oninput = (e) => {
+                        t[e.target.dataset.key] = e.target.value;
                         saveData();
-                    });
-
-                    qBlock.appendChild(label);
-                    qBlock.appendChild(textarea);
-                    formDiv.appendChild(qBlock);
+                    };
                 });
-
-                details.appendChild(summary);
-                details.appendChild(formDiv);
-                topicsContainer.appendChild(details);
+                container.appendChild(details);
             });
+            renderSubjects(); // Para actualizar la clase 'active'
         }
 
         renderSubjects();
