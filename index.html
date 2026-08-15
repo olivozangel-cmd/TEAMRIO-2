@@ -5,7 +5,6 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Gestor de Estudio</title>
     <style>
-        /* TUS ESTILOS CSS AQUÍ */
         :root {
             --primary: #4f46e5;
             --primary-hover: #4338ca;
@@ -22,7 +21,6 @@
         header p { color: var(--text-muted); font-size: 0.9rem; }
         .container { display: flex; flex: 1; overflow: hidden; padding: 2rem; gap: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
         
-        /* Sidebar */
         .sidebar { width: 300px; background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .sidebar h2 { margin-bottom: 1rem; font-size: 1.2rem; }
         .input-group { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
@@ -33,16 +31,13 @@
         .subjects-list { list-style: none; overflow-y: auto; }
         .subjects-list li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .subjects-list li:hover, .subjects-list li.active { background: var(--primary); color: white; }
-        .delete-btn { font-size: 1.2rem; cursor: pointer; }
-        .delete-btn:hover { color: #ff4757; }
+        .delete-btn { font-size: 1.2rem; cursor: pointer; color: #ff4757; }
         
-        /* Contenido Principal */
         .content { flex: 1; background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto; }
         .welcome-message { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
         .hidden { display: none !important; }
         #current-subject-title { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary); border-bottom: 2px solid var(--bg-color); padding-bottom: 0.5rem; }
         
-        /* Temas */
         details { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
         summary { padding: 1rem; font-weight: bold; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; list-style: none; }
         summary::-webkit-details-marker { display: none; }
@@ -62,7 +57,6 @@
     </header>
 
     <main class="container">
-        <!-- Panel lateral: Materias -->
         <aside class="sidebar">
             <h2>Materias</h2>
             <div class="input-group">
@@ -72,7 +66,6 @@
             <ul id="subjects-list" class="subjects-list"></ul>
         </aside>
 
-        <!-- Área principal: Temas y Preguntas -->
         <section class="content">
             <div id="welcome-message" class="welcome-message">
                 <h2>Selecciona o crea una materia para empezar a estudiar 🚀</h2>
@@ -92,18 +85,26 @@
     </main>
 
     <script>
-        // LÓGICA JAVASCRIPT PROTEGIDA
+        // Lógica súper protegida
         let studyData = [];
         let currentSubjectId = null;
 
-        // Intentar cargar datos guardados (con protección por si el navegador lo bloquea)
+        // LLAVE ÚNICA para evitar choques con otros proyectos de tu GitHub
+        const DB_KEY = 'mis_materias_prepa_v1';
+
+        // Intentar cargar datos de forma segura
         try {
-            const savedData = localStorage.getItem('studyData');
+            const savedData = localStorage.getItem(DB_KEY);
             if (savedData) {
-                studyData = JSON.parse(savedData);
+                const parseado = JSON.parse(savedData);
+                // Si la memoria tiene basura, la ignoramos y empezamos en blanco
+                if (Array.isArray(parseado)) {
+                    studyData = parseado;
+                }
             }
         } catch (error) {
-            console.warn("El navegador no permite guardar datos locales. Los datos se borrarán al cerrar la pestaña.");
+            console.log("Reiniciando memoria local para evitar errores.");
+            studyData = [];
         }
 
         const subjectInput = document.getElementById('subject-input');
@@ -118,13 +119,12 @@
 
         function saveData() {
             try {
-                localStorage.setItem('studyData', JSON.stringify(studyData));
+                localStorage.setItem(DB_KEY, JSON.stringify(studyData));
             } catch (error) {
-                // Falla silenciosamente si el navegador bloquea el guardado
+                console.error("Error guardando en el navegador.");
             }
         }
 
-        // AGREGAR MATERIA (Con clic y con Enter)
         function addSubject() {
             const name = subjectInput.value.trim();
             if (name) {
@@ -135,6 +135,8 @@
                 renderSubjects();
             }
         }
+
+        // Eventos del botón de materias
         addSubjectBtn.addEventListener('click', addSubject);
         subjectInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSubject(); });
 
@@ -151,7 +153,7 @@
                 deleteBtn.className = 'delete-btn';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if(confirm(`¿Eliminar la materia ${subject.name}?`)) {
+                    if(confirm('¿Eliminar la materia ' + subject.name + '?')) {
                         studyData = studyData.filter(s => s.id !== subject.id);
                         if(currentSubjectId === subject.id) {
                             currentSubjectId = null;
@@ -181,7 +183,6 @@
             renderTopics(subject);
         }
 
-        // AGREGAR TEMA (Con clic y con Enter)
         function addTopic() {
             const title = topicInput.value.trim();
             if (title && currentSubjectId) {
@@ -196,6 +197,8 @@
                 openSubject(studyData[subjectIndex]);
             }
         }
+
+        // Eventos del botón de temas
         addTopicBtn.addEventListener('click', addTopic);
         topicInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTopic(); });
 
@@ -205,7 +208,7 @@
             subject.topics.forEach(topic => {
                 const details = document.createElement('details');
                 const summary = document.createElement('summary');
-                summary.innerHTML = `<span>${topic.title}</span>`;
+                summary.innerHTML = '<span>' + topic.title + '</span>';
                 
                 const formDiv = document.createElement('div');
                 formDiv.className = 'reflection-form';
@@ -241,7 +244,7 @@
             });
         }
 
-        // Iniciar
+        // Arrancar
         renderSubjects();
     </script>
 </body>
