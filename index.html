@@ -3,9 +3,9 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Gestor de Estudio v2</title>
+    <title>Mi Gestor de Estudio</title>
     
-    <!-- Librerías de Firebase Realtime Database -->
+    <!-- Librerías de Firebase -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
@@ -13,21 +13,20 @@
         :root { --primary: #4f46e5; --primary-hover: #4338ca; --bg-color: #f3f4f6; --card-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280; --border-color: #e5e7eb; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; }
-        header { background-color: var(--card-bg); padding: 1.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; display: flex; justify-content: center; align-items: center; gap: 1rem; flex-direction: column; }
-        header h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.2rem; }
-        .status { font-size: 0.85rem; color: #10b981; font-weight: bold; background: #d1fae5; padding: 0.2rem 0.8rem; border-radius: 12px; }
-        .container { display: flex; flex: 1; overflow: hidden; padding: 2rem; gap: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-        .sidebar { width: 300px; background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
-        .sidebar h2 { margin-bottom: 1rem; font-size: 1.2rem; }
-        .input-group { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
-        input[type="text"] { flex: 1; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
-        button { background-color: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        .subjects-list { list-style: none; overflow-y: auto; }
-        .subjects-list li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .subjects-list li:hover { background: var(--primary); color: white; }
-        .content { flex: 1; background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto; }
-        .hidden { display: none !important; }
-        #current-subject-title { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary); }
+        header { background-color: var(--card-bg); padding: 1.5rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
+        .status { font-size: 0.8rem; color: #10b981; font-weight: bold; }
+        .container { display: flex; flex: 1; padding: 2rem; gap: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; overflow: hidden; }
+        .sidebar { width: 300px; background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); }
+        .input-group { display: flex; gap: 0.5rem; margin-bottom: 1rem; }
+        input { flex: 1; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; }
+        button { background-color: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; }
+        .subjects-list { list-style: none; }
+        .subjects-list li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; }
+        .subjects-list li.active { background: var(--primary); color: white; }
+        .content { flex: 1; background: var(--card-bg); padding: 2rem; border-radius: 12px; overflow-y: auto; }
+        .hidden { display: none; }
+        details { background: var(--bg-color); padding: 1rem; border-radius: 8px; margin-bottom: 1rem; }
+        textarea { width: 100%; height: 60px; margin-top: 0.5rem; }
     </style>
 </head>
 <body>
@@ -35,27 +34,29 @@
         <h1>📚 Mi Gestor de Estudio</h1>
         <span id="cloud-status" class="status">Conectando...</span>
     </header>
+
     <main class="container">
         <aside class="sidebar">
-            <h2>Materias</h2>
             <div class="input-group">
-                <input type="text" id="subject-input" placeholder="Ej. Matemáticas...">
+                <input type="text" id="subject-input" placeholder="Nueva materia...">
                 <button id="add-subject-btn">+</button>
             </div>
             <ul id="subjects-list" class="subjects-list"></ul>
         </aside>
+
         <section class="content">
-            <div id="welcome-message"><h2>Cargando desde Realtime Database...</h2></div>
-            <div id="subject-workspace" class="hidden">
-                <h2 id="current-subject-title"></h2>
+            <div id="welcome"><h2>Selecciona una materia para empezar 🚀</h2></div>
+            <div id="workspace" class="hidden">
+                <h2 id="current-title"></h2>
                 <div class="input-group">
                     <input type="text" id="topic-input" placeholder="Nuevo tema...">
-                    <button id="add-topic-btn">Agregar</button>
+                    <button id="add-topic-btn">Agregar Tema</button>
                 </div>
-                <div id="topics-container"></div>
+                <div id="topics-list"></div>
             </div>
         </section>
     </main>
+
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyC0pxZsisb97lKgvdfs7HR2Nm0sCvxODJs",
@@ -68,15 +69,55 @@
         };
         firebase.initializeApp(firebaseConfig);
         const dbRef = firebase.database().ref("estudios/mis_materias");
-        const statusText = document.getElementById('cloud-status');
-        
-        dbRef.once('value').then((snapshot) => {
-            statusText.textContent = "Conectado a la Nube ✅";
-            console.log("Conectado exitosamente.");
-        }).catch((e) => {
-            statusText.textContent = "Error de conexión";
-            console.error(e);
+
+        let studyData = [];
+        let currentId = null;
+
+        dbRef.on('value', (snap) => {
+            const data = snap.val();
+            studyData = data ? (data.datos || []) : [];
+            document.getElementById('cloud-status').textContent = "Nube sincronizada ✅";
+            renderSubjects();
         });
+
+        function save() { dbRef.set({ datos: studyData }); }
+
+        document.getElementById('add-subject-btn').onclick = () => {
+            const val = document.getElementById('subject-input').value;
+            if(val) { studyData.push({ id: Date.now().toString(), name: val, topics: [] }); save(); document.getElementById('subject-input').value = ''; }
+        };
+
+        function renderSubjects() {
+            const list = document.getElementById('subjects-list');
+            list.innerHTML = '';
+            studyData.forEach(s => {
+                const li = document.createElement('li');
+                li.textContent = s.name;
+                li.onclick = () => { currentId = s.id; renderWorkspace(); };
+                list.appendChild(li);
+            });
+        }
+
+        document.getElementById('add-topic-btn').onclick = () => {
+            const input = document.getElementById('topic-input');
+            const s = studyData.find(x => x.id === currentId);
+            if(input.value && s) { s.topics.push({ title: input.value, note: '' }); save(); input.value = ''; renderWorkspace(); }
+        };
+
+        function renderWorkspace() {
+            document.getElementById('welcome').classList.add('hidden');
+            document.getElementById('workspace').classList.remove('hidden');
+            const s = studyData.find(x => x.id === currentId);
+            document.getElementById('current-title').textContent = s.name;
+            const list = document.getElementById('topics-list');
+            list.innerHTML = '';
+            s.topics.forEach((t, i) => {
+                const det = document.createElement('details');
+                det.innerHTML = `<summary>${t.title}</summary><textarea placeholder="Apuntes...">${t.note}</textarea>`;
+                det.querySelector('textarea').oninput = (e) => { s.topics[i].note = e.target.value; save(); };
+                list.appendChild(det);
+            });
+        }
     </script>
 </body>
 </html>
