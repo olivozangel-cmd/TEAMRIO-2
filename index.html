@@ -5,9 +5,9 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Gestor de Estudio</title>
     
-    <!-- Librerías de Firebase -->
+    <!-- Librerías de Firebase Realtime Database -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
-    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
     <style>
         :root {
@@ -92,7 +92,6 @@
     </main>
 
     <script>
-        // Configuración de Firebase integrada directamente
         const firebaseConfig = {
             apiKey: "AIzaSyC0pxZsisb97lKgvdfs7HR2Nm0sCvxODJs",
             authDomain: "gestor-de-estudio-62196.firebaseapp.com",
@@ -103,10 +102,8 @@
             measurementId: "G-F6TNHD1S09"
         };
 
-        // Inicializar Firebase
         firebase.initializeApp(firebaseConfig);
-        const db = firebase.firestore();
-        const docRef = db.collection("estudios").doc("mis_materias");
+        const dbRef = firebase.database().ref("estudios/mis_materias");
 
         let studyData = [];
         let currentSubjectId = null;
@@ -122,11 +119,10 @@
         const addTopicBtn = document.getElementById('add-topic-btn');
         const topicsContainer = document.getElementById('topics-container');
 
-        // Cargar datos al entrar
-        docRef.get().then((doc) => {
-            if (doc.exists) {
-                studyData = doc.data().datos || [];
-            }
+        // Cargar datos de Realtime Database
+        dbRef.once('value').then((snapshot) => {
+            const data = snapshot.val();
+            studyData = data ? (data.datos || []) : [];
             statusText.textContent = "Nube sincronizada ☁️";
             addSubjectBtn.disabled = false;
             welcomeMessage.innerHTML = "<h2>Selecciona o crea una materia para empezar 🚀</h2>";
@@ -135,13 +131,12 @@
             statusText.textContent = "Error de conexión ❌";
             statusText.style.background = "#fee2e2";
             statusText.style.color = "#ef4444";
-            console.error("Error al cargar Firebase:", error);
+            console.error("Error al cargar:", error);
         });
 
-        // Guardar datos en la nube
         function saveData() {
             statusText.textContent = "Guardando... ⏳";
-            docRef.set({
+            dbRef.set({
                 datos: studyData
             }).then(() => {
                 statusText.textContent = "Nube sincronizada ☁️";
@@ -178,7 +173,7 @@
                 deleteBtn.className = 'delete-btn';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if(confirm('¿Eliminar la materia ' + subject.name + ' en la nube?')) {
+                    if(confirm('¿Eliminar la materia ' + subject.name + '?')) {
                         studyData = studyData.filter(s => s.id !== subject.id);
                         if(currentSubjectId === subject.id) {
                             currentSubjectId = null;
