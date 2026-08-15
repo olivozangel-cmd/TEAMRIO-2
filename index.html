@@ -3,94 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Mi Gestor de Estudio</title>
+    <title>Mi Gestor de Estudio v2</title>
     
     <!-- Librerías de Firebase Realtime Database -->
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
     <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-database-compat.js"></script>
 
     <style>
-        :root {
-            --primary: #4f46e5;
-            --primary-hover: #4338ca;
-            --bg-color: #f3f4f6;
-            --card-bg: #ffffff;
-            --text-main: #1f2937;
-            --text-muted: #6b7280;
-            --border-color: #e5e7eb;
-        }
+        :root { --primary: #4f46e5; --primary-hover: #4338ca; --bg-color: #f3f4f6; --card-bg: #ffffff; --text-main: #1f2937; --text-muted: #6b7280; --border-color: #e5e7eb; }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; }
         header { background-color: var(--card-bg); padding: 1.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; display: flex; justify-content: center; align-items: center; gap: 1rem; flex-direction: column; }
         header h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.2rem; }
         .status { font-size: 0.85rem; color: #10b981; font-weight: bold; background: #d1fae5; padding: 0.2rem 0.8rem; border-radius: 12px; }
-        
         .container { display: flex; flex: 1; overflow: hidden; padding: 2rem; gap: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
-        
         .sidebar { width: 300px; background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
         .sidebar h2 { margin-bottom: 1rem; font-size: 1.2rem; }
         .input-group { display: flex; gap: 0.5rem; margin-bottom: 1.5rem; }
         input[type="text"] { flex: 1; padding: 0.6rem; border: 1px solid var(--border-color); border-radius: 6px; outline: none; }
-        input[type="text"]:focus { border-color: var(--primary); }
         button { background-color: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
-        button:hover { background-color: var(--primary-hover); }
-        button:disabled { background-color: #9ca3af; cursor: not-allowed; }
         .subjects-list { list-style: none; overflow-y: auto; }
         .subjects-list li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
-        .subjects-list li:hover, .subjects-list li.active { background: var(--primary); color: white; }
-        .delete-btn { font-size: 1.2rem; cursor: pointer; color: #ff4757; }
-        
+        .subjects-list li:hover { background: var(--primary); color: white; }
         .content { flex: 1; background: var(--card-bg); padding: 2rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); overflow-y: auto; }
-        .welcome-message { height: 100%; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
         .hidden { display: none !important; }
-        #current-subject-title { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary); border-bottom: 2px solid var(--bg-color); padding-bottom: 0.5rem; }
-        
-        details { background: var(--bg-color); border: 1px solid var(--border-color); border-radius: 8px; margin-bottom: 1rem; overflow: hidden; }
-        summary { padding: 1rem; font-weight: bold; cursor: pointer; background: white; display: flex; justify-content: space-between; align-items: center; list-style: none; }
-        summary::-webkit-details-marker { display: none; }
-        summary::after { content: "▼"; color: var(--text-muted); font-size: 0.8rem; }
-        details[open] summary::after { content: "▲"; }
-        .reflection-form { padding: 1.5rem; border-top: 1px solid var(--border-color); }
-        .question-block { margin-bottom: 1.5rem; }
-        .question-block label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
-        .question-block textarea { width: 100%; min-height: 80px; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: 6px; resize: vertical; }
-        .question-block textarea:focus { border-color: var(--primary); outline: none; }
+        #current-subject-title { font-size: 1.8rem; margin-bottom: 1.5rem; color: var(--primary); }
     </style>
 </head>
 <body>
     <header>
         <h1>📚 Mi Gestor de Estudio</h1>
-        <span id="cloud-status" class="status">Conectando a la nube... ☁️</span>
+        <span id="cloud-status" class="status">Conectando...</span>
     </header>
-
     <main class="container">
         <aside class="sidebar">
             <h2>Materias</h2>
             <div class="input-group">
                 <input type="text" id="subject-input" placeholder="Ej. Matemáticas...">
-                <button id="add-subject-btn" disabled>+</button>
+                <button id="add-subject-btn">+</button>
             </div>
             <ul id="subjects-list" class="subjects-list"></ul>
         </aside>
-
         <section class="content">
-            <div id="welcome-message" class="welcome-message">
-                <h2>Cargando tus apuntes... 🚀</h2>
-            </div>
-
+            <div id="welcome-message"><h2>Cargando desde Realtime Database...</h2></div>
             <div id="subject-workspace" class="hidden">
-                <h2 id="current-subject-title">Nombre de la Materia</h2>
-                
+                <h2 id="current-subject-title"></h2>
                 <div class="input-group">
-                    <input type="text" id="topic-input" placeholder="Nuevo tema (Ej. Célula Eucariota)...">
-                    <button id="add-topic-btn">Agregar Tema</button>
+                    <input type="text" id="topic-input" placeholder="Nuevo tema...">
+                    <button id="add-topic-btn">Agregar</button>
                 </div>
-
-                <div id="topics-container" class="topics-container"></div>
+                <div id="topics-container"></div>
             </div>
         </section>
     </main>
-
     <script>
         const firebaseConfig = {
             apiKey: "AIzaSyC0pxZsisb97lKgvdfs7HR2Nm0sCvxODJs",
@@ -101,173 +66,17 @@
             appId: "1:145892071263:web:2a1ed91c33c5f33d1788ea",
             measurementId: "G-F6TNHD1S09"
         };
-
         firebase.initializeApp(firebaseConfig);
         const dbRef = firebase.database().ref("estudios/mis_materias");
-
-        let studyData = [];
-        let currentSubjectId = null;
-
         const statusText = document.getElementById('cloud-status');
-        const subjectInput = document.getElementById('subject-input');
-        const addSubjectBtn = document.getElementById('add-subject-btn');
-        const subjectsList = document.getElementById('subjects-list');
-        const welcomeMessage = document.getElementById('welcome-message');
-        const subjectWorkspace = document.getElementById('subject-workspace');
-        const currentSubjectTitle = document.getElementById('current-subject-title');
-        const topicInput = document.getElementById('topic-input');
-        const addTopicBtn = document.getElementById('add-topic-btn');
-        const topicsContainer = document.getElementById('topics-container');
-
-        // Cargar datos de Realtime Database
+        
         dbRef.once('value').then((snapshot) => {
-            const data = snapshot.val();
-            studyData = data ? (data.datos || []) : [];
-            statusText.textContent = "Nube sincronizada ☁️";
-            addSubjectBtn.disabled = false;
-            welcomeMessage.innerHTML = "<h2>Selecciona o crea una materia para empezar 🚀</h2>";
-            renderSubjects();
-        }).catch((error) => {
-            statusText.textContent = "Error de conexión ❌";
-            statusText.style.background = "#fee2e2";
-            statusText.style.color = "#ef4444";
-            console.error("Error al cargar:", error);
+            statusText.textContent = "Conectado a la Nube ✅";
+            console.log("Conectado exitosamente.");
+        }).catch((e) => {
+            statusText.textContent = "Error de conexión";
+            console.error(e);
         });
-
-        function saveData() {
-            statusText.textContent = "Guardando... ⏳";
-            dbRef.set({
-                datos: studyData
-            }).then(() => {
-                statusText.textContent = "Nube sincronizada ☁️";
-            }).catch((error) => {
-                console.error("Error guardando:", error);
-                statusText.textContent = "Error al guardar ❌";
-            });
-        }
-
-        function addSubject() {
-            const name = subjectInput.value.trim();
-            if (name) {
-                const newSubject = { id: Date.now().toString(), name: name, topics: [] };
-                studyData.push(newSubject);
-                saveData();
-                subjectInput.value = '';
-                renderSubjects();
-            }
-        }
-
-        addSubjectBtn.addEventListener('click', addSubject);
-        subjectInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSubject(); });
-
-        function renderSubjects() {
-            subjectsList.innerHTML = '';
-            studyData.forEach(subject => {
-                const li = document.createElement('li');
-                li.textContent = subject.name;
-                
-                if (subject.id === currentSubjectId) li.classList.add('active');
-
-                const deleteBtn = document.createElement('span');
-                deleteBtn.textContent = '×';
-                deleteBtn.className = 'delete-btn';
-                deleteBtn.onclick = (e) => {
-                    e.stopPropagation();
-                    if(confirm('¿Eliminar la materia ' + subject.name + '?')) {
-                        studyData = studyData.filter(s => s.id !== subject.id);
-                        if(currentSubjectId === subject.id) {
-                            currentSubjectId = null;
-                            welcomeMessage.classList.remove('hidden');
-                            subjectWorkspace.classList.add('hidden');
-                        }
-                        saveData();
-                        renderSubjects();
-                    }
-                };
-
-                li.appendChild(deleteBtn);
-                li.addEventListener('click', () => {
-                    currentSubjectId = subject.id;
-                    renderSubjects(); 
-                    openSubject(subject);
-                });
-
-                subjectsList.appendChild(li);
-            });
-        }
-
-        function openSubject(subject) {
-            welcomeMessage.classList.add('hidden');
-            subjectWorkspace.classList.remove('hidden');
-            currentSubjectTitle.textContent = subject.name;
-            renderTopics(subject);
-        }
-
-        function addTopic() {
-            const title = topicInput.value.trim();
-            if (title && currentSubjectId) {
-                const subjectIndex = studyData.findIndex(s => s.id === currentSubjectId);
-                studyData[subjectIndex].topics.push({
-                    id: Date.now().toString(),
-                    title: title,
-                    q1: '', q2: '', q3: ''
-                });
-                saveData();
-                topicInput.value = '';
-                openSubject(studyData[subjectIndex]);
-            }
-        }
-
-        addTopicBtn.addEventListener('click', addTopic);
-        topicInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTopic(); });
-
-        function renderTopics(subject) {
-            topicsContainer.innerHTML = '';
-            
-            subject.topics.forEach(topic => {
-                const details = document.createElement('details');
-                const summary = document.createElement('summary');
-                summary.innerHTML = '<span>' + topic.title + '</span>';
-                
-                const formDiv = document.createElement('div');
-                formDiv.className = 'reflection-form';
-
-                const questions = [
-                    { key: 'q1', label: '👀 ¿Qué viste en este tema?' },
-                    { key: 'q2', label: '✨ ¿Qué te llamó más la atención?' },
-                    { key: 'q3', label: '🧠 ¿Qué fue lo que más recordaste?' }
-                ];
-
-                questions.forEach(q => {
-                    const qBlock = document.createElement('div');
-                    qBlock.className = 'question-block';
-                    const label = document.createElement('label');
-                    label.textContent = q.label;
-                    const textarea = document.createElement('textarea');
-                    textarea.placeholder = "Escribe tus apuntes aquí...";
-                    textarea.value = topic[q.key];
-                    
-                    let timeoutId;
-                    textarea.addEventListener('input', (e) => {
-                        topic[q.key] = e.target.value;
-                        statusText.textContent = "Escribiendo... ✍️";
-                        
-                        clearTimeout(timeoutId);
-                        timeoutId = setTimeout(() => {
-                            saveData();
-                        }, 1000);
-                    });
-
-                    qBlock.appendChild(label);
-                    qBlock.appendChild(textarea);
-                    formDiv.appendChild(qBlock);
-                });
-
-                details.appendChild(summary);
-                details.appendChild(formDiv);
-                topicsContainer.appendChild(details);
-            });
-        }
     </script>
 </body>
 </html>
