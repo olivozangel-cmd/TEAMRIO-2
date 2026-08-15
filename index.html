@@ -4,6 +4,11 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Mi Gestor de Estudio</title>
+    
+    <!-- Librerías de Firebase -->
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/10.13.0/firebase-firestore-compat.js"></script>
+
     <style>
         :root {
             --primary: #4f46e5;
@@ -16,9 +21,10 @@
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; }
-        header { background-color: var(--card-bg); padding: 1.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; }
-        header h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.5rem; }
-        header p { color: var(--text-muted); font-size: 0.9rem; }
+        header { background-color: var(--card-bg); padding: 1.5rem 2rem; box-shadow: 0 1px 3px rgba(0,0,0,0.1); text-align: center; display: flex; justify-content: center; align-items: center; gap: 1rem; flex-direction: column; }
+        header h1 { color: var(--primary); font-size: 1.8rem; margin-bottom: 0.2rem; }
+        .status { font-size: 0.85rem; color: #10b981; font-weight: bold; background: #d1fae5; padding: 0.2rem 0.8rem; border-radius: 12px; }
+        
         .container { display: flex; flex: 1; overflow: hidden; padding: 2rem; gap: 2rem; max-width: 1200px; margin: 0 auto; width: 100%; }
         
         .sidebar { width: 300px; background: var(--card-bg); padding: 1.5rem; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.05); display: flex; flex-direction: column; }
@@ -28,6 +34,7 @@
         input[type="text"]:focus { border-color: var(--primary); }
         button { background-color: var(--primary); color: white; border: none; padding: 0.6rem 1rem; border-radius: 6px; cursor: pointer; font-weight: 600; }
         button:hover { background-color: var(--primary-hover); }
+        button:disabled { background-color: #9ca3af; cursor: not-allowed; }
         .subjects-list { list-style: none; overflow-y: auto; }
         .subjects-list li { padding: 0.8rem; margin-bottom: 0.5rem; background: var(--bg-color); border-radius: 6px; cursor: pointer; display: flex; justify-content: space-between; align-items: center; }
         .subjects-list li:hover, .subjects-list li.active { background: var(--primary); color: white; }
@@ -53,7 +60,7 @@
 <body>
     <header>
         <h1>📚 Mi Gestor de Estudio</h1>
-        <p>Preparación para Finales y Universidad</p>
+        <span id="cloud-status" class="status">Conectando a la nube... ☁️</span>
     </header>
 
     <main class="container">
@@ -61,14 +68,14 @@
             <h2>Materias</h2>
             <div class="input-group">
                 <input type="text" id="subject-input" placeholder="Ej. Matemáticas...">
-                <button id="add-subject-btn">+</button>
+                <button id="add-subject-btn" disabled>+</button>
             </div>
             <ul id="subjects-list" class="subjects-list"></ul>
         </aside>
 
         <section class="content">
             <div id="welcome-message" class="welcome-message">
-                <h2>Selecciona o crea una materia para empezar a estudiar 🚀</h2>
+                <h2>Cargando tus apuntes... 🚀</h2>
             </div>
 
             <div id="subject-workspace" class="hidden">
@@ -85,28 +92,26 @@
     </main>
 
     <script>
-        // Lógica súper protegida
+        // Configuración de Firebase integrada directamente
+        const firebaseConfig = {
+            apiKey: "AIzaSyC0pxZsisb97lKgvdfs7HR2Nm0sCvxODJs",
+            authDomain: "gestor-de-estudio-62196.firebaseapp.com",
+            projectId: "gestor-de-estudio-62196",
+            storageBucket: "gestor-de-estudio-62196.firebasestorage.app",
+            messagingSenderId: "145892071263",
+            appId: "1:145892071263:web:2a1ed91c33c5f33d1788ea",
+            measurementId: "G-F6TNHD1S09"
+        };
+
+        // Inicializar Firebase
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.firestore();
+        const docRef = db.collection("estudios").doc("mis_materias");
+
         let studyData = [];
         let currentSubjectId = null;
 
-        // LLAVE ÚNICA para evitar choques con otros proyectos de tu GitHub
-        const DB_KEY = 'mis_materias_prepa_v1';
-
-        // Intentar cargar datos de forma segura
-        try {
-            const savedData = localStorage.getItem(DB_KEY);
-            if (savedData) {
-                const parseado = JSON.parse(savedData);
-                // Si la memoria tiene basura, la ignoramos y empezamos en blanco
-                if (Array.isArray(parseado)) {
-                    studyData = parseado;
-                }
-            }
-        } catch (error) {
-            console.log("Reiniciando memoria local para evitar errores.");
-            studyData = [];
-        }
-
+        const statusText = document.getElementById('cloud-status');
         const subjectInput = document.getElementById('subject-input');
         const addSubjectBtn = document.getElementById('add-subject-btn');
         const subjectsList = document.getElementById('subjects-list');
@@ -117,12 +122,33 @@
         const addTopicBtn = document.getElementById('add-topic-btn');
         const topicsContainer = document.getElementById('topics-container');
 
-        function saveData() {
-            try {
-                localStorage.setItem(DB_KEY, JSON.stringify(studyData));
-            } catch (error) {
-                console.error("Error guardando en el navegador.");
+        // Cargar datos al entrar
+        docRef.get().then((doc) => {
+            if (doc.exists) {
+                studyData = doc.data().datos || [];
             }
+            statusText.textContent = "Nube sincronizada ☁️";
+            addSubjectBtn.disabled = false;
+            welcomeMessage.innerHTML = "<h2>Selecciona o crea una materia para empezar 🚀</h2>";
+            renderSubjects();
+        }).catch((error) => {
+            statusText.textContent = "Error de conexión ❌";
+            statusText.style.background = "#fee2e2";
+            statusText.style.color = "#ef4444";
+            console.error("Error al cargar Firebase:", error);
+        });
+
+        // Guardar datos en la nube
+        function saveData() {
+            statusText.textContent = "Guardando... ⏳";
+            docRef.set({
+                datos: studyData
+            }).then(() => {
+                statusText.textContent = "Nube sincronizada ☁️";
+            }).catch((error) => {
+                console.error("Error guardando:", error);
+                statusText.textContent = "Error al guardar ❌";
+            });
         }
 
         function addSubject() {
@@ -136,7 +162,6 @@
             }
         }
 
-        // Eventos del botón de materias
         addSubjectBtn.addEventListener('click', addSubject);
         subjectInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSubject(); });
 
@@ -153,7 +178,7 @@
                 deleteBtn.className = 'delete-btn';
                 deleteBtn.onclick = (e) => {
                     e.stopPropagation();
-                    if(confirm('¿Eliminar la materia ' + subject.name + '?')) {
+                    if(confirm('¿Eliminar la materia ' + subject.name + ' en la nube?')) {
                         studyData = studyData.filter(s => s.id !== subject.id);
                         if(currentSubjectId === subject.id) {
                             currentSubjectId = null;
@@ -198,7 +223,6 @@
             }
         }
 
-        // Eventos del botón de temas
         addTopicBtn.addEventListener('click', addTopic);
         topicInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTopic(); });
 
@@ -228,9 +252,15 @@
                     textarea.placeholder = "Escribe tus apuntes aquí...";
                     textarea.value = topic[q.key];
                     
+                    let timeoutId;
                     textarea.addEventListener('input', (e) => {
                         topic[q.key] = e.target.value;
-                        saveData();
+                        statusText.textContent = "Escribiendo... ✍️";
+                        
+                        clearTimeout(timeoutId);
+                        timeoutId = setTimeout(() => {
+                            saveData();
+                        }, 1000);
                     });
 
                     qBlock.appendChild(label);
@@ -243,9 +273,6 @@
                 topicsContainer.appendChild(details);
             });
         }
-
-        // Arrancar
-        renderSubjects();
     </script>
 </body>
 </html>
