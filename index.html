@@ -13,6 +13,9 @@
             --text-main: #1f2937;
             --text-muted: #6b7280;
             --border-color: #e5e7eb;
+            --surprise-bg: #fdf4ff;
+            --surprise-border: #f0abfc;
+            --surprise-text: #86198f;
         }
         * { box-sizing: border-box; margin: 0; padding: 0; font-family: 'Segoe UI', system-ui, sans-serif; }
         body { background-color: var(--bg-color); color: var(--text-main); display: flex; flex-direction: column; height: 100vh; }
@@ -48,6 +51,11 @@
         .question-block label { display: block; font-weight: 600; margin-bottom: 0.5rem; }
         .question-block textarea { width: 100%; min-height: 80px; padding: 0.8rem; border: 1px solid var(--border-color); border-radius: 6px; resize: vertical; }
         .question-block textarea:focus { border-color: var(--primary); outline: none; }
+
+        /* Estilo de la sorpresa original */
+        .surprise-box { background-color: var(--surprise-bg); border: 1px solid var(--surprise-border); padding: 1rem; border-radius: 8px; margin-bottom: 1.5rem; color: var(--surprise-text); }
+        .surprise-box h4 { margin-bottom: 0.3rem; font-size: 1rem; display: flex; align-items: center; gap: 0.5rem; }
+        .surprise-box p { font-size: 0.9rem; line-height: 1.4; }
     </style>
 </head>
 <body>
@@ -85,25 +93,29 @@
     </main>
 
     <script>
-        // Lógica súper protegida
         let studyData = [];
         let currentSubjectId = null;
+        const DB_KEY = 'mis_materias_prepa_v2';
 
-        // LLAVE ÚNICA para evitar choques con otros proyectos de tu GitHub
-        const DB_KEY = 'mis_materias_prepa_v1';
+        // Banco de retos sorpresa para potenciar el aprendizaje activo
+        const learningChallenges = [
+            "💡 Reto Feynman: Explica este tema en voz alta como si se lo enseñaras a un niño de 10 años, sin usar palabras complicadas.",
+            "🧩 Conexión Loca: Intenta relacionar este tema con algo de la vida cotidiana o un videojuego/película que te guste.",
+            "⚡ Alerta de Trampa: Piensa en cuál sería la pregunta más 'tranza' o difícil que un profesor te podría poner sobre este tema en el examen.",
+            "🎯 Síntesis extrema: Si solo pudieras recordar una sola frase de este tema para toda tu vida, ¿cuál sería? Escríbela.",
+            "🔄 Inversión de roles: Imagina que tú eres el profesor y redacta mentalmente un mini examen de opción múltiple sobre este tema."
+        ];
 
-        // Intentar cargar datos de forma segura
         try {
             const savedData = localStorage.getItem(DB_KEY);
             if (savedData) {
                 const parseado = JSON.parse(savedData);
-                // Si la memoria tiene basura, la ignoramos y empezamos en blanco
                 if (Array.isArray(parseado)) {
                     studyData = parseado;
                 }
             }
         } catch (error) {
-            console.log("Reiniciando memoria local para evitar errores.");
+            console.log("Reiniciando memoria local.");
             studyData = [];
         }
 
@@ -121,7 +133,7 @@
             try {
                 localStorage.setItem(DB_KEY, JSON.stringify(studyData));
             } catch (error) {
-                console.error("Error guardando en el navegador.");
+                console.error("Error guardando.");
             }
         }
 
@@ -136,7 +148,6 @@
             }
         }
 
-        // Eventos del botón de materias
         addSubjectBtn.addEventListener('click', addSubject);
         subjectInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addSubject(); });
 
@@ -187,10 +198,14 @@
             const title = topicInput.value.trim();
             if (title && currentSubjectId) {
                 const subjectIndex = studyData.findIndex(s => s.id === currentSubjectId);
+                // Asignamos un reto aleatorio único para este tema basado en su longitud de texto o ID
+                const randomChallenge = learningChallenges[Math.floor(Math.random() * learningChallenges.length)];
+                
                 studyData[subjectIndex].topics.push({
                     id: Date.now().toString(),
                     title: title,
-                    q1: '', q2: '', q3: ''
+                    q1: '', q2: '', q3: '', q4: '', q5: '',
+                    challenge: randomChallenge
                 });
                 saveData();
                 topicInput.value = '';
@@ -198,7 +213,6 @@
             }
         }
 
-        // Eventos del botón de temas
         addTopicBtn.addEventListener('click', addTopic);
         topicInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') addTopic(); });
 
@@ -213,12 +227,22 @@
                 const formDiv = document.createElement('div');
                 formDiv.className = 'reflection-form';
 
+                // Caja sorpresa integrada de forma original
+                if (!topic.challenge) {
+                    topic.challenge = learningChallenges[Math.floor(Math.random() * learningChallenges.length)];
+                }
+                const surpriseBox = document.createElement('div');
+                surpriseBox.className = 'surprise-box';
+                surpriseBox.innerHTML = `<h4>🎁 Chispa de Aprendizaje Activo</h4><p>${topic.challenge}</p>`;
+                formDiv.appendChild(surpriseBox);
+
+                // Preguntas actualizadas según tu solicitud
                 const questions = [
                     { key: 'q1', label: '👀 ¿Qué viste en este tema?' },
                     { key: 'q2', label: '✨ ¿Qué te llamó más la atención?' },
-                    { key: 'q3', label: '🧠 ¿Qué fue lo que más recordaste?' }
-                    { key: 'q3', label: '🧠 ¿Hubo un apunte importe?' }
-                    { key: 'q3', label: '🧠 ¿agrega algo que no quiseras olvidar?' }
+                    { key: 'q3', label: '🧠 ¿Qué fue lo que más recordaste?' },
+                    { key: 'q4', label: '⭐ ¿Hubo un apunte importante?' },
+                    { key: 'q5', label: '🔒 Agrega algo que no quisieras olvidar' }
                 ];
 
                 questions.forEach(q => {
@@ -228,7 +252,7 @@
                     label.textContent = q.label;
                     const textarea = document.createElement('textarea');
                     textarea.placeholder = "Escribe tus apuntes aquí...";
-                    textarea.value = topic[q.key];
+                    textarea.value = topic[q.key] || '';
                     
                     textarea.addEventListener('input', (e) => {
                         topic[q.key] = e.target.value;
@@ -246,7 +270,6 @@
             });
         }
 
-        // Arrancar
         renderSubjects();
     </script>
 </body>
